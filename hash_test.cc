@@ -1,4 +1,5 @@
 #include <boost/lexical_cast.hpp>
+#include <stdio.h> // snprintf
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
@@ -281,6 +282,16 @@ void Run(ContainerType & v, const int BlobSize) {
 		Test(arr_64[i].name, v.begin(), v.end(), arr_64[i].f, dummy64, BlobSize);
 }
 
+void Title(const char *t) {
+	std::cout << t << "\n";
+	std::cout 
+		<< std::left  << std::setw(16) << "  name"
+		<< std::right << std::setw(8) << "time used"
+		<< std::right << std::setw(15) << "unique"
+		<< std::right << std::setw(15) << "collided\n"
+		<< "----------------------------------------------------\n";
+}
+
 int main(int argc, char* argv[]) {
 	int count = 10000;
 
@@ -288,21 +299,43 @@ int main(int argc, char* argv[]) {
 		count = atoi(argv[1]);
 	}
 
-	std::cout 
-		<< std::left  << std::setw(16) << "  name"
-		<< std::right << std::setw(8) << "time used"
-		<< std::right << std::setw(15) << "unique"
-		<< std::right << std::setw(15) << "collided\n"
-		<< "-----------------------------------------------\n";
-
 	{
 		std::vector<uint32_t> v(count);
 		for (uint32_t i=0; i<count; ++i)
 			v[i] = i;
+		
+		Title("Source style: int32, convert to char *");
 		Run(v, 4);
+		std::cout << "\n";
 	}
 
-	std::cout << "\n";
+	{
+		char sz[11];
+		std::vector<std::string> v(count);
+		for (uint32_t i=0; i<count; ++i) {
+			int ret = snprintf(sz, sizeof(sz), "%010d", i);
+			assert(ret == 10);
+			v[i] = std::string(sz);
+		}
+
+		Title("Source style: %d format string");
+		Run(v, 10);
+		std::cout << "\n";
+	}
+
+	{
+		char sz[13];
+		std::vector<std::string> v(count);
+		for (uint32_t i=0; i<count; ++i) {
+			int ret = snprintf(sz, sizeof(sz), "u:%010d", i);
+			assert(ret == 12);
+			v[i] = std::string(sz);
+		}
+
+		Title("Source style: u:%d format string, length is 12");
+		Run(v, 12);
+		std::cout << "\n";
+	}
 
 	{
 		std::vector<std::string> v(count);
@@ -323,6 +356,7 @@ int main(int argc, char* argv[]) {
 		assert(map2.size() == v.size());
 		map2.clear();
 
+		Title("Source style: random string length is 10");
 		Run(v, 10);
 	}
 	
