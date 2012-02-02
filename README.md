@@ -1,3 +1,4 @@
+compare some hash function of collided rate and performance.
 <pre>
 Source style: int32, convert to char *
   name          time used         unique      collided
